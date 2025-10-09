@@ -12,6 +12,10 @@ public:
 
   virtual void BeginFrame() = 0;
   virtual void EndFrame()   = 0;
+  virtual void BeginSwapChainRenderPass() = 0;
+  virtual void EndSwapChainRenderPass()   = 0;
+
+  virtual void WaitDeviceIdle() = 0;
 
   virtual bool IsInitialized() const { return _initialized; }
 

@@ -1,11 +1,11 @@
 #include "RavaFramework.h"
 
 #include "Graphics/Vulkan/VKContext.h"
-//#include "Graphics/Vulkan/VKUtils.h"
-#include "Graphics/Vulkan/VKValidation.h"
 
 #include "Core/Config.h"
 #include "Core/Window.h"
+#include "Graphics/Vulkan/VKUtils.h"
+#include "Graphics/Vulkan/VKValidation.h"
 
 namespace VK {
 Context::Context() {
@@ -18,6 +18,7 @@ Context::Context() {
   CreateLogicalDevice();
   CreateCommandPool();
 }
+
 void Context::CreateInstance() {
   if (ENABLE_VALIDATION && IsValidationLayerSupport()) {
     std::print("Validation layers requested, but not available!\n");
@@ -26,7 +27,7 @@ void Context::CreateInstance() {
   // Application info (optional)
   VkApplicationInfo appInfo{};
   appInfo.sType              = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-  appInfo.pApplicationName   = Rava::Config::WindowTitle.data();
+  appInfo.pApplicationName   = Config::WindowTitle.data();
   appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
   appInfo.pEngineName        = "RavaFramework";
   appInfo.engineVersion      = VK_MAKE_VERSION(1, 0, 0);
@@ -60,7 +61,7 @@ void Context::CreateInstance() {
 
   // Create instance
   VkResult result = vkCreateInstance(&createInfo, nullptr, &_instance);
-  _initialized = IsResultValid(result, "Failed to Create Vulkan Instance!\n");
+  _initialized    = IsResultValid(result, "Failed to Create Vulkan Instance!\n");
 }
 
 void Context::SetupDebugMessenger() {
@@ -71,7 +72,7 @@ void Context::SetupDebugMessenger() {
   VkDebugUtilsMessengerCreateInfoEXT createInfo;
   PopulateDebugMessengerCreateInfo(createInfo);
   VkResult result = CreateDebugUtilsMessengerEXT(_instance, &createInfo, nullptr, &_debugMessenger);
-  _initialized = IsResultValid(result, "Failed to Setup Debug Messenger!\n");
+  _initialized    = IsResultValid(result, "Failed to Setup Debug Messenger!\n");
 }
 
 void Context::CreateSurface() {
@@ -109,11 +110,11 @@ void Context::PickPhysicalDevice() {
 }
 
 void Context::CreateLogicalDevice() {
-  _queueFamilyIndices = FindQueueFamilies(_physicalDevice);
+  QueueFamilyIndices queueFamilyIndices = FindQueueFamilies(_physicalDevice);
 
   std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
   std::set<int> uniqueQueueFamilies
-      = {_queueFamilyIndices.GraphicsFamily, _queueFamilyIndices.PresentFamily};
+      = {queueFamilyIndices.GraphicsFamily, queueFamilyIndices.PresentFamily};
 
   float queuePriority = 1.0f;
   for (u32 queueFamily : uniqueQueueFamilies) {
@@ -137,21 +138,23 @@ void Context::CreateLogicalDevice() {
   createInfo.ppEnabledExtensionNames = DEVICE_EXTENSIONS.data();
 
   VkResult result = vkCreateDevice(_physicalDevice, &createInfo, nullptr, &_device);
-  _initialized = IsResultValid(result, "Failed to Create Logical Device!\n");
+  _initialized    = IsResultValid(result, "Failed to Create Logical Device!\n");
 
-  vkGetDeviceQueue(_device, _queueFamilyIndices.GraphicsFamily, 0, &_graphicsQueue);
-  vkGetDeviceQueue(_device, _queueFamilyIndices.PresentFamily, 0, &_presentQueue);
+  vkGetDeviceQueue(_device, queueFamilyIndices.GraphicsFamily, 0, &_graphicsQueue);
+  vkGetDeviceQueue(_device, queueFamilyIndices.PresentFamily, 0, &_presentQueue);
 }
 
 void Context::CreateCommandPool() {
+  QueueFamilyIndices queueFamilyIndices = FindQueueFamilies(_physicalDevice);
+
   VkCommandPoolCreateInfo poolInfo = {};
   poolInfo.sType                   = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
   poolInfo.flags
       = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-  poolInfo.queueFamilyIndex = _queueFamilyIndices.GraphicsFamily;
+  poolInfo.queueFamilyIndex = queueFamilyIndices.GraphicsFamily;
 
   VkResult result = vkCreateCommandPool(_device, &poolInfo, nullptr, &_commandPool);
-  _initialized = IsResultValid(result, "Failed to Create Command Pool!\n");
+  _initialized    = IsResultValid(result, "Failed to Create Command Pool!\n");
 }
 
 bool Context::IsValidationLayerSupport() {
@@ -172,6 +175,61 @@ bool Context::IsValidationLayerSupport() {
   }
 
   return layerFound;
+}
+
+void Context::CreateImageWithInfo(
+    const VkImageCreateInfo& imageInfo, VkMemoryPropertyFlags properties, VkImage& image,
+    VkDeviceMemory& imageMemory
+) {
+  if (vkCreateImage(_device, &imageInfo, nullptr, &image) != VK_SUCCESS) {
+    throw std::runtime_error("failed to create image!");
+  }
+
+  VkMemoryRequirements memRequirements;
+  vkGetImageMemoryRequirements(_device, image, &memRequirements);
+
+  VkMemoryAllocateInfo allocInfo{};
+  allocInfo.sType           = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+  allocInfo.allocationSize  = memRequirements.size;
+  allocInfo.memoryTypeIndex = FindMemoryTypeIndex(memRequirements.memoryTypeBits, properties);
+
+  if (vkAllocateMemory(_device, &allocInfo, nullptr, &imageMemory) != VK_SUCCESS) {
+    throw std::runtime_error("failed to allocate image memory!");
+  }
+
+  if (vkBindImageMemory(_device, image, imageMemory, 0) != VK_SUCCESS) {
+    throw std::runtime_error("failed to bind image memory!");
+  }
+}
+
+u32 Context::FindMemoryTypeIndex(u32 allowedTypes, VkMemoryPropertyFlags properties) const {
+  // Get properties of physical device memory
+  VkPhysicalDeviceMemoryProperties memoryProperties;
+  vkGetPhysicalDeviceMemoryProperties(_physicalDevice, &memoryProperties);
+
+  for (u32 i = 0; i < memoryProperties.memoryTypeCount; ++i) {
+    if ((allowedTypes & (1 << i))
+        && (memoryProperties.memoryTypes[i].propertyFlags & properties) == properties) {
+      return i;
+    }
+  }
+}
+
+VkFormat Context::FindSupportedFormat(
+    const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features
+) {
+  for (VkFormat format : candidates) {
+    VkFormatProperties props;
+    vkGetPhysicalDeviceFormatProperties(_physicalDevice, format, &props);
+
+    if (tiling == VK_IMAGE_TILING_LINEAR && (props.linearTilingFeatures & features) == features) {
+      return format;
+    } else if (tiling == VK_IMAGE_TILING_OPTIMAL
+               && (props.optimalTilingFeatures & features) == features) {
+      return format;
+    }
+  }
+  throw std::runtime_error("failed to find supported format!");
 }
 
 std::vector<const char*> Context::GetRequiredExtensions() {
@@ -219,9 +277,8 @@ bool Context::IsDeviceSuitable(VkPhysicalDevice device) {
 
   bool swapChainAdequate = false;
   if (extensionsSupported) {
-    _swapChainDetails = GetSwapChainDetails(device);
-    swapChainAdequate
-        = !_swapChainDetails.Formats.empty() && !_swapChainDetails.PresentModes.empty();
+    SwapchainDetails swapChainDetails = GetSwapchainDetails(device);
+    swapChainAdequate = !swapChainDetails.Formats.empty() && !swapChainDetails.PresentModes.empty();
   }
 
   VkPhysicalDeviceFeatures supportedFeatures;
@@ -252,7 +309,7 @@ bool Context::IsDeviceExtensionSupport(VkPhysicalDevice device) {
   return requiredExtensions.empty();
 }
 
-QueueFamilyIndices Context::FindQueueFamilies(VkPhysicalDevice device) const {
+QueueFamilyIndices Context::FindQueueFamilies(VkPhysicalDevice device) {
   QueueFamilyIndices indices;
 
   u32 queueFamilyCount = 0;
@@ -283,8 +340,8 @@ QueueFamilyIndices Context::FindQueueFamilies(VkPhysicalDevice device) const {
   return indices;
 }
 
-SwapChainDetails Context::GetSwapChainDetails(VkPhysicalDevice device) const {
-  SwapChainDetails swapChainDetails;
+SwapchainDetails Context::GetSwapchainDetails(VkPhysicalDevice device) {
+  SwapchainDetails swapChainDetails;
   vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
       device, _surface, &swapChainDetails.SurfaceCapabilities
   );

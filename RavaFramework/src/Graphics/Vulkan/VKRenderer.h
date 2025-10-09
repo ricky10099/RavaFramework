@@ -4,10 +4,11 @@
 
 namespace VK {
 class Context;
-class SwapChain;
+class Swapchain;
 class Renderer : public Rava::Renderer {
 public:
   // static Unique<DescriptorPool> GlobalDescriptorPool;
+  //static Unique<Context> VKContext;
 
 public:
   Renderer();
@@ -17,22 +18,23 @@ public:
 
   virtual void BeginFrame() override;
   virtual void EndFrame() override;
-  void BeginSwapChainRenderPass();
-  void EndSwapChainRenderPass();
+  virtual void BeginSwapChainRenderPass() override;
+  virtual void EndSwapChainRenderPass() override;
 
+  virtual void WaitDeviceIdle() override;
 
-  const Context* GetContext() { return _context; }
+  const Shared<Context> GetContext() const { return _context; }
   VkCommandBuffer GetCurrentCommandBuffer() const;
 
 private:
-  Context* _context;
-  Unique<SwapChain> _swapChain;
+  Shared<Context> _context;
+  Unique<Swapchain> _swapchain;
   std::vector<VkCommandBuffer> _commandBuffers;
   VkCommandBuffer _currentCommandBuffer = VK_NULL_HANDLE;
 
   u32 _currentImageIndex;
   u32 _currentFrameIndex;
-  bool _isFrameStarted = false;
+  //bool _isFrameStarted = false;
 
 private:
   void RecreateSwapChain();

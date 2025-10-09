@@ -110,13 +110,14 @@ extern void SetClearColor(Color color);
 extern void SetFullscreen(bool isFullscreen);
 extern void SetResizeable(bool isResizable);
 extern void SetRendererAPI(RendererAPI api);
+extern bool InitFramework(u32 width, u32 height);
 extern bool InitFramework(u32 width, u32 height, std::string_view title);
 extern void ShutdownFramework();
 
 // Main loop helpers
 extern bool ProcessMessage();  // handle window events
-// void BeginFrame();
-// void EndFrame();
+extern void BeginFrame();
+extern void EndFrame();
 
 //// Simple draw API (expand later)
 // void DrawTriangle();

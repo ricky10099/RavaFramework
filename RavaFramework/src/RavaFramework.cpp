@@ -7,16 +7,33 @@
 #include "Graphics/Context.h"
 #include "Graphics/Renderer.h"
 
+namespace Config {
+extern RendererAPI SelectedAPI = RendererAPI::Vulkan;
+extern u32 WindowWidth = 1280;
+extern u32 WindowHeight             = 720;
+extern std::string_view WindowTitle = "RavaFramework";
+extern bool IsFullscreen            = false;
+extern bool IsResizeable            = true;
+extern Color ClearColor             = {0.3f, 0.3f, 0.3f, 1.0f};
+}  // namespace Config
+
 namespace Rava {
+bool InitFramework(u32 width, u32 height) {
+  return InitFramework(width, height, "RavaFramework");
+}
+
 bool InitFramework(u32 width, u32 height, std::string_view title) {
   Config::WindowWidth  = width;
   Config::WindowHeight = height;
   Config::WindowTitle  = title;
 
-  return Window::Create()/* && Context::Create()*/ && Renderer::Create();
+  return Window::Create() && Renderer::Create();
 }
 
 void ShutdownFramework() {
+  if (Renderer::Instance) {
+    Renderer::Instance->WaitDeviceIdle();
+  }
   std::print("Shutdown");
 }
 
@@ -42,6 +59,16 @@ void SetRendererAPI(RendererAPI api) {
 
 bool ProcessMessage() {
   return Window::Instance->ProcessMessage();
+}
+
+void BeginFrame() {
+  Renderer::Instance->BeginFrame();
+  Renderer::Instance->BeginSwapChainRenderPass();
+}
+
+void EndFrame() {
+  Renderer::Instance->EndSwapChainRenderPass();
+  Renderer::Instance->EndFrame();
 }
 }  // namespace Rava
 

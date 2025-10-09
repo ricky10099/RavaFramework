@@ -15,6 +15,10 @@ Window::Window() : _glfwWindow(nullptr) {
   GLFWmonitor* primaryMonitor  = glfwGetPrimaryMonitor();
   const GLFWvidmode* videoMode = glfwGetVideoMode(primaryMonitor);
 
+  if (Config::WindowWidth == 0) {
+    Config::WindowWidth = 1280;
+  }
+
   if (Config::IsFullscreen) {
     _glfwWindow = glfwCreateWindow(
         videoMode->width, videoMode->height, Config::WindowTitle.data(), primaryMonitor, nullptr
@@ -67,8 +71,8 @@ bool Window::ProcessMessage() const {
 }
 
 void Window::ResizeCallback(GLFWwindow* glfwWindow, int width, int height) {
-  //auto window          = reinterpret_cast<Window*>(glfwGetWindowUserPointer(glfwWindow));
-  //window->_resized     = true;
+  auto window          = reinterpret_cast<Window*>(glfwGetWindowUserPointer(glfwWindow));
+  window->_resized     = true;
   Config::WindowWidth  = width;
   Config::WindowHeight = height;
 }

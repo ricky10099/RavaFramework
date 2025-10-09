@@ -9,11 +9,11 @@
 //  if (x != VK_SUCCESS) {  \
 //    std::print("[ERROR]: {}", msg); \
 //  }
-
-static bool IsResultValid(VkResult result) {
-  std::string_view msg("[vulkan] Error: VkResult = {0}", result);
-  return IsResultValid(result, msg);
-}
+//
+//static bool IsResultValid(VkResult result) {
+//  std::string_view msg("[vulkan] Error: VkResult = {0}", result);
+//  return IsResultValid(result, msg);
+//}
 
 static bool IsResultValid(VkResult result, std::string_view msg) {
   if (result != VK_SUCCESS) {
@@ -48,7 +48,7 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(
       std::print("[INFO]: {}", pCallbackData->pMessage);
       return VK_FALSE;
     case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
-      std::print(pCallbackData->pMessage);
+      std::print("[MESSAGE]: {}", pCallbackData->pMessage);
       return VK_FALSE;
     default:
       return VK_FALSE;
