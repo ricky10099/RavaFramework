@@ -19,10 +19,10 @@ struct Mesh {
   u32 IndexCount;
 };
 
-class Model {
-public:
-  static Unique<Model> Create(std::string_view file);
-
-  virtual void Draw() = 0;
-};
+//class Model {
+//public:
+//  static Model Create(std::string_view file);
+//
+//  virtual void Draw() {}
+//};
 }  // namespace Rava

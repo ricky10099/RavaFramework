@@ -1,6 +1,6 @@
 #pragma once
 
-//#include "Graphics/Context.h"
+#include "Graphics/Context.h"
 // #include "Graphics/Vulkan/VKUtils.h"
 
 namespace VK {
@@ -18,7 +18,7 @@ struct QueueFamilyIndices {
   bool IsValid() const { return GraphicsFamily >= 0 && PresentFamily >= 0; }
 };
 
-class Context /*: public Rava::Context*/ {
+class Context : public Rava::Context {
 public:
   Context();
   virtual ~Context() /* override*/ { std::print("~Context"); }
@@ -68,7 +68,7 @@ private:
   //QueueFamilyIndices _queueFamilyIndices;
 
 private:
-  bool _initialized = false;
+  //bool _initialized = false;
   // Initialization
   void CreateInstance();
   void SetupDebugMessenger();

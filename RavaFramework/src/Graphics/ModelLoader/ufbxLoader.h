@@ -1,5 +1,7 @@
 #pragma once
 
+#include <ufbx/ufbx.h>
+
 namespace Rava {
 struct Vertex;
 struct Mesh;

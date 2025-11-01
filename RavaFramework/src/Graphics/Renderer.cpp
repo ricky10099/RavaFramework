@@ -15,6 +15,8 @@ bool Renderer::Create() {
     case RendererAPI::Vulkan:
       Instance = std::make_unique<VK::Renderer>();
       return Instance->IsInitialized();
+    case RendererAPI::DirectX12:
+
     default:
       return false;
   }

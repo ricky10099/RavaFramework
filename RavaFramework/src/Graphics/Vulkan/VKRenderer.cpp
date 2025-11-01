@@ -4,7 +4,7 @@
 #include "Graphics/Vulkan/VKValidation.h"
 
 #include "Core/Window.h"
-#include "Graphics/Context.h"
+//#include "Graphics/Context.h"
 #include "Graphics/Vulkan/VKContext.h"
 #include "Graphics/Vulkan/VKRenderer.h"
 #include "Graphics/Vulkan/VKSwapchain.h"
@@ -180,6 +180,10 @@ void Renderer::EndSwapChainRenderPass() {
 void Renderer::WaitDeviceIdle() {
   vkDeviceWaitIdle(_context->GetLogicalDevice());
 }
+
+//int Renderer::CreateModel(std::string filepath) {
+//    Model::
+//}
 
 VkCommandBuffer Renderer::GetCurrentCommandBuffer() const {
   return _commandBuffers[_swapchain->GetCurrentFrameIndex()];

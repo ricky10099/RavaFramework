@@ -19,6 +19,7 @@ public:
 
   inline void ResetResizedFlag() { _resized = false; }
 
+  inline HWND GetWin32Window() const { return glfwGetWin32Window(_glfwWindow); }
   inline GLFWwindow* GetGLFWWindow() const { return _glfwWindow; }
   inline bool IsInitialized() const { return _initialized; }
   inline bool IsResized() const { return _resized; }
@@ -26,7 +27,7 @@ public:
 private:
   GLFWwindow* _glfwWindow;
   bool _initialized = false;
-  bool _resized = false;
+  bool _resized     = false;
 
 private:
   static void ResizeCallback(GLFWwindow* window, int width, int height);

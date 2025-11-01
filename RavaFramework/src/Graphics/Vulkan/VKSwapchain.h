@@ -10,8 +10,8 @@ public:
 
   NO_COPY(Swapchain)
 
-  VkResult AcquireNextImage(uint32_t* imageIndex);
-  VkResult SubmitCommandBuffers(const VkCommandBuffer* buffers, uint32_t* imageIndex);
+  VkResult AcquireNextImage(u32* imageIndex);
+  VkResult SubmitCommandBuffers(const VkCommandBuffer* buffers, u32* imageIndex);
 
   inline VkFramebuffer GetFrameBuffer(int index) { return _swapchainFramebuffers[index]; }
   inline VkRenderPass GetRenderPass() const { return _renderPass; }

@@ -8,8 +8,8 @@
 #include "Graphics/Renderer.h"
 
 namespace Config {
-extern RendererAPI SelectedAPI = RendererAPI::Vulkan;
-extern u32 WindowWidth = 1280;
+extern RendererAPI SelectedAPI      = RendererAPI::Vulkan;
+extern u32 WindowWidth              = 1280;
 extern u32 WindowHeight             = 720;
 extern std::string_view WindowTitle = "RavaFramework";
 extern bool IsFullscreen            = false;
@@ -55,6 +55,13 @@ void SetResizeable(bool isResizable) {
 
 void SetRendererAPI(RendererAPI api) {
   Config::SelectedAPI = api;
+  switch (api) {
+    case RendererAPI::DirectX12:
+#pragma comment(lib, "d3d12.lib")
+#pragma comment(lib, "dxgi.lib")
+#pragma comment(lib, "d3dcompiler.lib")
+      break;
+  }
 }
 
 bool ProcessMessage() {
